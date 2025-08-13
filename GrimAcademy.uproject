@@ -24,15 +24,15 @@
 			"Enabled": true
 		},
 		{
-			"Name": "VRM4U",
-			"Enabled": true
-		},
-		{
 			"Name": "PCG",
 			"Enabled": true
 		},
 		{
 			"Name": "ChaosClothAssetEditor",
+			"Enabled": true
+		},
+		{
+			"Name": "VRM4U",
 			"Enabled": true
 		}
 	]
