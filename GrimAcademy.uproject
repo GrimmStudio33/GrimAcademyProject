@@ -33,7 +33,7 @@
 		},
 		{
 			"Name": "VRM4U",
-			"Enabled": false
+			"Enabled": true
 		},
 		{
 			"Name": "Landmass",
