@@ -1,4 +1,4 @@
-// VRM4U Copyright (c) 2021-2024 Haruyoshi Yamamoto. This software is released under the MIT License.
+// VRM4U Copyright (c) 2021-2026 Haruyoshi Yamamoto. This software is released under the MIT License.
 
 #pragma once
 
@@ -56,7 +56,11 @@ struct VRM4UCAPTURE_API FAnimNode_VrmVMC : public FAnimNode_SkeletalControlBase
 	int Port = 39539;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Skeleton, meta = (PinShownByDefault))
+	bool bApplyEyeBone = true;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Skeleton, meta = (PinShownByDefault))
 	bool bApplyPerfectSync = true;
+
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Skeleton, meta = (PinHiddenByDefault))
 	bool bForceUpdate = false;

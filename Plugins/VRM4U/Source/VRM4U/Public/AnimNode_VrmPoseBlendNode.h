@@ -1,4 +1,4 @@
-// VRM4U Copyright (c) 2021-2024 Haruyoshi Yamamoto. This software is released under the MIT License.
+// VRM4U Copyright (c) 2021-2026 Haruyoshi Yamamoto. This software is released under the MIT License.
 
 #pragma once
 
@@ -42,7 +42,7 @@ struct VRM4U_API FAnimNode_VrmPoseBlendNode : public FAnimNode_PoseBlendNode
 #endif
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Skeleton, meta = (PinHiddenByDefault))
-	bool bRemovePoseCurve = true;
+	bool bRemovePoseCurve = false;
 
 
 	bool bCallInitialized = false;

@@ -1,4 +1,4 @@
-﻿// VRM4U Copyright (c) 2021-2024 Haruyoshi Yamamoto. This software is released under the MIT License.
+﻿// VRM4U Copyright (c) 2021-2026 Haruyoshi Yamamoto. This software is released under the MIT License.
 
 #include "VrmConvertRig.h"
 #include "VrmConvert.h"
@@ -537,6 +537,26 @@ namespace {
 								targetNo = GetCurves().Num();
 							}
 						}
+						{
+#if	UE_VERSION_OLDER_THAN(5,0,0)
+							// morph search出来ないのでスキップ
+#else
+
+							// Poseで登録しようとする名前と 同じMorphがある場合はスキップ
+							auto& MorphList = sk->GetMorphTargets();
+							auto* ind = MorphList.FindByPredicate([&SmartPoseName](const TObjectPtr<UMorphTarget > morph) {
+#if UE_VERSION_OLDER_THAN(5,3,0)
+								if (morph->GetName().Compare(SmartPoseName.DisplayName.ToString())) return false;
+#else
+								if (morph->GetName().Compare(SmartPoseName.ToString())) return false;
+#endif
+								return true;
+								});
+							if (ind) {
+								bSameName = true;
+							}
+#endif
+						}
 
 						{
 							// DisplayName check
@@ -1069,16 +1089,15 @@ bool VRMConverter::ConvertPose(UVrmAssetListObject *vrmAssetList) {
 								t.BoneVRM,
 							};
 							bool finish = false;
-							for (int i = 0; i < 2; ++i) {
-								auto* m = vrmAssetList->VrmMetaObject->humanoidBoneTable.Find(target[i]);
+							{
+								auto* m = vrmAssetList->VrmMetaObject->humanoidBoneTable.Find(target[0]);
 								if (m) {
 									bFound = true;
-									a.BoneVRM = target[i];
+									a.BoneVRM = target[0];
 									a.BoneModel = *m;
 									mapTable.Add(a.BoneModel, a);
 								}
 								finish = true;
-								break;
 							}
 
 							if (finish) break;

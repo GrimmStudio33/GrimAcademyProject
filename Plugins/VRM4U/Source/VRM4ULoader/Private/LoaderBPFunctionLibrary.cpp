@@ -1,4 +1,4 @@
-// VRM4U Copyright (c) 2021-2024 Haruyoshi Yamamoto. This software is released under the MIT License.
+// VRM4U Copyright (c) 2021-2026 Haruyoshi Yamamoto. This software is released under the MIT License.
 
 #include "LoaderBPFunctionLibrary.h"
 
@@ -70,7 +70,7 @@
 
 #if UE_VERSION_OLDER_THAN(5,4,0)
 #else
-#include "MIsc/FieldAccessor.h"
+#include "Misc/FieldAccessor.h"
 #endif
 
 #if PLATFORM_WINDOWS
@@ -215,9 +215,22 @@ static bool RenewPkgAndSaveObject(UObject *u, bool bSave) {
 			FSavePackageArgs SaveArgs = { nullptr, EObjectFlags::RF_Standalone, SAVE_NoError, true,
 					true, true, FDateTime::MinValue(), GError };
 			bool bSaved = UPackage::SavePackage(s_vrm_package, u, *(s_vrm_package->GetName()), SaveArgs);
-#else
+#elif UE_VERSION_OLDER_THAN(5,8,0)
 			FSavePackageArgs SaveArgs = { nullptr, nullptr, EObjectFlags::RF_Standalone, SAVE_NoError, true,
 					true, true, FDateTime::MinValue(), GError };
+			bool bSaved = UPackage::SavePackage(s_vrm_package, u, *(s_vrm_package->GetName()), SaveArgs);
+#else
+			FSavePackageArgs SaveArgs;
+			SaveArgs.ArchiveCookData = nullptr;
+			SaveArgs.TopLevelFlags = EObjectFlags::RF_Standalone;
+			SaveArgs.SaveFlags = SAVE_NoError;
+			SaveArgs.bForceByteSwapping = true;
+			SaveArgs.bWarnOfLongFilename = true;
+			SaveArgs.bSlowTask = true;
+			SaveArgs.FinalTimeStamp = FDateTime::MinValue();
+			SaveArgs.Error = GError;
+			SaveArgs.SavePackageContext = nullptr;
+
 			bool bSaved = UPackage::SavePackage(s_vrm_package, u, *(s_vrm_package->GetName()), SaveArgs);
 #endif
 		}
@@ -486,6 +499,36 @@ namespace {
 		return re;
 	}
 #endif
+}
+
+bool ULoaderBPFunctionLibrary::IsValidVRM4UFile(FString filepath) {
+
+	UE_LOG(LogVRM4ULoader, Log, TEXT("IsValidVRM: OrigFileName=%s"), *filepath);
+
+	const FString ext = FPaths::GetExtension(filepath);
+	if (ext.Compare(TEXT("vrm"), ESearchCase::IgnoreCase) && ext.Compare(TEXT("vrma"), ESearchCase::IgnoreCase)) {
+		// vrm, vrma以外は素通し
+		return true;
+	}
+
+	std::string file;
+#if PLATFORM_WINDOWS
+	file = utf_16_to_shift_jis(*filepath);
+#else
+	file = TCHAR_TO_UTF8(*filepath);
+#endif
+
+	UE_LOG(LogVRM4ULoader, Log, TEXT("IsValidVRM: std::stringFileName=%hs"), file.c_str());
+
+	TArray<uint8> Res;
+	if (FFileHelper::LoadFileToArray(Res, *filepath)) {
+		UE_LOG(LogVRM4ULoader, Log, TEXT("IsValidVRM: filesize=%d"), Res.Num());
+
+		extern bool VRMIsValid(const uint8_t * pData, size_t size);
+			
+		return VRMIsValid(Res.GetData(), Res.Num());
+	}
+	return false;
 }
 
 void ULoaderBPFunctionLibrary::GetVRMMeta(FString filepath, UVrmLicenseObject*& a, UVrm1LicenseObject*& b) {
@@ -804,6 +847,12 @@ bool ULoaderBPFunctionLibrary::LoadVRMFileFromMemory(const UVrmAssetListObject *
 		if (ret == false) {
 			RemoveAssetList(out);
 			return false;
+		}
+		{
+			// 後処理。UE5.7ではCreateMeshDescription を呼ぶため必要
+			if (out->SkeletalMesh) {
+				out->SkeletalMesh->PostLoad();
+			}
 		}
 	}
 	out->VrmMetaObject->SkeletalMesh = out->SkeletalMesh;

@@ -1,4 +1,4 @@
-// VRM4U Copyright (c) 2021-2024 Haruyoshi Yamamoto. This software is released under the MIT License.
+// VRM4U Copyright (c) 2021-2026 Haruyoshi Yamamoto. This software is released under the MIT License.
 
 #include "VrmBPFunctionLibrary.h"
 #include "Materials/MaterialInterface.h"
@@ -7,12 +7,14 @@
 #include "Engine/Engine.h"
 #include "Engine/TextureRenderTarget2D.h"
 #include "Engine/SkeletalMesh.h"
-#include "Logging/MessageLog.h"
 #include "Engine/Canvas.h"
+#include "Engine/GameViewportClient.h"
+#include "Logging/MessageLog.h"
 #include "Materials/MaterialInstanceConstant.h"
 #include "Materials/MaterialInstanceDynamic.h"
 #include "Animation/MorphTarget.h"
 #include "Misc/EngineVersionComparison.h"
+
 #if	UE_VERSION_OLDER_THAN(4,26,0)
 #include "AssetRegistryModule.h"
 #include "ARFilter.h"
@@ -31,6 +33,11 @@
 #include "Rendering/SkeletalMeshModel.h"
 
 #include "VrmRigHeader.h"
+
+#if	UE_VERSION_OLDER_THAN(5,2,0)
+#else
+#include "RenderCounters.h"
+#endif
 
 #if	UE_VERSION_OLDER_THAN(5,5,0)
 #else
@@ -962,6 +969,29 @@ void UVrmBPFunctionLibrary::VRMChangeMaterialStaticSwitch(UMaterialInstanceConst
 #endif
 }
 
+void UVrmBPFunctionLibrary::VRMGetMaterialStaticSwitch(UMaterialInstance* material, FName paramName, bool& bHasParam, bool& bEnable) {
+
+	bHasParam = false;
+	bEnable = false;
+	if (material == nullptr) return;
+
+#if WITH_EDITORONLY_DATA
+	if (GIsEditor == false) {
+		return;
+	}
+
+	bool Value = false;
+	FGuid ExpressionGuid;
+	if (material->GetStaticSwitchParameterValue(paramName, Value, ExpressionGuid))
+	{
+		bHasParam = true;
+		bEnable = Value;
+		return;
+	}
+	return;
+#endif
+}
+
 
 
 UObject* UVrmBPFunctionLibrary::VRMDuplicateAsset(UObject *src, FString name, UObject *thisOwner) {
@@ -1002,6 +1032,11 @@ bool UVrmBPFunctionLibrary::VRMGetAssetsByPackageName(FName PackageName, TArray<
 	auto &AssetRegistry = AssetRegistryModule.Get();
 
 	return AssetRegistry.GetAssetsByPackageName(PackageName, OutAssetData, bIncludeOnlyOnDiskAssets);
+}
+
+void UVrmBPFunctionLibrary::VRMSetIsDirty(UObject* obj) {
+	if (obj == nullptr) return;
+	obj->MarkPackageDirty();
 }
 
 UTextureRenderTarget2D* UVrmBPFunctionLibrary::VRMCreateRenderTarget2D(UObject* WorldContextObject, int32 Width, int32 Height, ETextureRenderTargetFormat Format, FLinearColor ClearColor)
@@ -1414,8 +1449,9 @@ namespace {
 		}
 		BOOL b = SetLayeredWindowAttributes(h, cr, a, dwFlags);
 		return b != 0;
-#endif
+#else
 		return false;
+#endif
 	}
 	void setDefaultWindow(const bool) {
 		setTransParent(false, FLinearColor(1, 1, 1, 1));
@@ -1914,6 +1950,74 @@ bool UVrmBPFunctionLibrary::VRMIsEditorPreviewObject(const UObject* obj) {
 	}
 
 	return false;
+}
+
+void UVrmBPFunctionLibrary::VRMGetViewportSize(FIntPoint & ViewportSize, FIntPoint & BufferSize, bool bForceMainView){
+
+	ViewportSize = FIntPoint(0, 0);
+	BufferSize = FIntPoint(0, 0);
+
+	bool bFoundViewport = false;
+
+#if WITH_EDITOR
+	//bool bPlay, bool bSIE, bool bEditor
+	bool bPlay, bSIE, bEditor;
+	VRMGetPlayMode(bPlay, bSIE, bEditor);
+
+	bool bGameView = bPlay;
+	if (bSIE) {
+		bGameView = false;
+	}
+
+	if (GEditor == nullptr) {
+		bGameView = true;
+	}else{
+		if (GEditor->GetActiveViewport() == nullptr) bGameView = true;
+	}
+
+	if (GEditor) {
+		if (bGameView == false) {
+			bFoundViewport = true;
+			ViewportSize = GEditor->GetActiveViewport()->GetRenderTargetTextureSizeXY();
+			if (bForceMainView)
+			{
+				FViewportClient* ViewportClient = GEditor->GetActiveViewport()->GetClient();
+				UWorld* ViewportWorld = ViewportClient ? ViewportClient->GetWorld() : nullptr;
+
+				const EWorldType::Type WT = ViewportWorld ? (EWorldType::Type)ViewportWorld->WorldType : EWorldType::None;
+				const bool bIsEditorViewport = (WT == EWorldType::Editor);
+				const bool bIsPreviewOrThumbnail = (WT == EWorldType::EditorPreview);
+
+				// レベルエディタのビューポートだけ採用
+				if (bIsEditorViewport && !bPlay && !bSIE && !bIsPreviewOrThumbnail)
+				{
+					BufferSize = ViewportSize;
+					return;
+				}
+			}
+		}
+	}
+#endif
+
+	if (bFoundViewport == false){
+		if (GEngine == nullptr) return;
+		if (GEngine->GameViewport == nullptr) return;
+		if (GEngine->GameViewport->Viewport == nullptr) return;
+
+		FViewport* Viewport = GEngine->GameViewport->Viewport;
+		ViewportSize = Viewport->GetRenderTargetTextureSizeXY();
+	}
+
+#if	UE_VERSION_OLDER_THAN(5,6,0)
+	float ScreenPercentage = FMath::Clamp(UKismetSystemLibrary::GetConsoleVariableFloatValue("r.ScreenPercentage"), 1.f, 100.f);
+	BufferSize = FIntPoint (
+		FMath::RoundToInt(ViewportSize.X * ScreenPercentage / 100.0f),
+		FMath::RoundToInt(ViewportSize.Y * ScreenPercentage / 100.0f)
+	);
+#else
+	BufferSize = GPixelRenderCounters.GetRenderResolution();
+#endif
+
 }
 
 

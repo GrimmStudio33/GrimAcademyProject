@@ -1,4 +1,4 @@
-// VRM4U Copyright (c) 2021-2024 Haruyoshi Yamamoto. This software is released under the MIT License.
+// VRM4U Copyright (c) 2021-2026 Haruyoshi Yamamoto. This software is released under the MIT License.
 
 #pragma once
 
@@ -41,6 +41,9 @@ class UPackage;
 
 
 class VRM4ULOADER_API VRMConverter {
+
+	bool InitJSON(const uint8* pData, size_t pFileDataSize);
+
 public:
 
 	VrmJson jsonData;
@@ -65,9 +68,12 @@ public:
 	static bool NormalizeBoneName(const aiScene *mScenePtr);
 
 	bool Init(const uint8* pFileData, size_t dataSize, const aiScene*);
+	bool ValidateSchema();
 
 	bool ConvertTextureAndMaterial(UVrmAssetListObject *vrmAssetList);
-	bool ConvertModel(UVrmAssetListObject *vrmAssetList);
+	bool ConvertModel(UVrmAssetListObject* vrmAssetList);
+	bool ConvertModel_internal(UVrmAssetListObject* vrmAssetList);
+	bool ConvertModel_internal_description(UVrmAssetListObject* vrmAssetList);
 	bool ConvertMorphTarget(UVrmAssetListObject *vrmAssetList);
 
 	void GetVRMMeta(const aiScene *mScenePtr, UVrmLicenseObject *& a, UVrm1LicenseObject *& b);
@@ -123,6 +129,7 @@ public:
 		bool IsGenerateIKBone() const;
 		bool IsGenerateRigIK() const;
 
+		bool IsDebugIgnoreVRMValidation() const;
 		bool IsDebugOneBone() const;
 		bool IsDebugNoMesh() const;
 		bool IsDebugNoMaterial() const;

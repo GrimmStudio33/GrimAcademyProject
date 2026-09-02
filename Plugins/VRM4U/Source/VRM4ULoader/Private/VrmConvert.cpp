@@ -1,4 +1,4 @@
-// VRM4U Copyright (c) 2021-2024 Haruyoshi Yamamoto. This software is released under the MIT License.
+// VRM4U Copyright (c) 2021-2026 Haruyoshi Yamamoto. This software is released under the MIT License.
 
 #include "VrmConvert.h"
 
@@ -360,6 +360,16 @@ int VRMConverter::Options::GetBoneWeightInfluenceNum() const {
 #endif
 }
 
+bool VRMConverter::Options::IsDebugIgnoreVRMValidation() const {
+	bool ret = false;
+#if WITH_EDITOR
+	if (ImportOption == nullptr) return ret;
+
+	return ImportOption->bIgnoreVRMValidation;
+#else
+	return ret;
+#endif
+}
 
 bool VRMConverter::Options::IsDebugOneBone() const {
 	bool ret = false;
