@@ -8,7 +8,7 @@ public class GrimAcademyEditorTarget : TargetRules
 	public GrimAcademyEditorTarget(TargetInfo Target) : base(Target)
 	{
 		Type = TargetType.Editor;
-		DefaultBuildSettings = BuildSettingsVersion.V6;
+		DefaultBuildSettings = BuildSettingsVersion.V7;
 
 		ExtraModuleNames.AddRange( new string[] { "GrimAcademy" } );
 	}
