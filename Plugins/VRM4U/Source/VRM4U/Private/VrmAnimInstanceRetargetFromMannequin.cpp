@@ -1,4 +1,4 @@
-// VRM4U Copyright (c) 2021-2026 Haruyoshi Yamamoto. This software is released under the MIT License.
+// VRM4U Copyright (c) 2021-2024 Haruyoshi Yamamoto. This software is released under the MIT License.
 
 
 #include "VrmAnimInstanceRetargetFromMannequin.h"
@@ -191,7 +191,7 @@ bool FVrmAnimInstanceRetargetFromMannequinProxy::Evaluate(FPoseContext& Output) 
 
 				auto& constraint = *Node_Constraint.Get();
 
-				constraint.VrmMetaObject_Internal = FSoftObjectPath(dstMeta);
+				constraint.VrmMetaObject_Internal = dstMeta;
 				constraint.bCallByAnimInstance = true;
 
 				FAnimationInitializeContext InitContext(this);
@@ -242,7 +242,7 @@ bool FVrmAnimInstanceRetargetFromMannequinProxy::Evaluate(FPoseContext& Output) 
 
 				auto& springBone = *Node_SpringBone.Get();
 
-				springBone.VrmMetaObject_Internal = FSoftObjectPath(dstMeta);
+				springBone.VrmMetaObject_Internal = dstMeta;
 				springBone.bCallByAnimInstance = true;
 				springBone.CurrentDeltaTime = CurrentDeltaTime;
 

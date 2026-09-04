@@ -1,4 +1,4 @@
-﻿// VRM4U Copyright (c) 2021-2026 Haruyoshi Yamamoto. This software is released under the MIT License.
+﻿// VRM4U Copyright (c) 2021-2024 Haruyoshi Yamamoto. This software is released under the MIT License.
 
 
 #include "AnimNode_VrmVMC.h"
@@ -36,7 +36,7 @@ FAnimNode_VrmVMC::~FAnimNode_VrmVMC()
 void FAnimNode_VrmVMC::Initialize_AnyThread(const FAnimationInitializeContext& Context) {
 	Super::Initialize_AnyThread(Context);
 
-	VrmMetaObject_Internal = FSoftObjectPath(VrmMetaObject);
+	VrmMetaObject_Internal = VrmMetaObject;
 	if (VrmMetaObject_Internal == nullptr && EnableAutoSearchMetaData) {
 		VrmAssetListObject_Internal = VRMUtil::GetAssetListObject(VRMGetSkinnedAsset(Context.AnimInstanceProxy->GetSkelMeshComponent()));
 		if (VrmAssetListObject_Internal) {
@@ -186,14 +186,9 @@ void FAnimNode_VrmVMC::EvaluateSkeletalControl_AnyThread(FComponentSpacePoseCont
 			auto modelBone = filterList.begin()->Value;
 #endif
 
+
 			int index = RefSkeleton.FindBoneIndex(*t.Value);
 			if (index < 0) continue;
-
-			if (bApplyEyeBone == false){
-				if (t.Key.Compare("leftEye")==0 || t.Key.Compare("rightEye")==0){
-					continue;
-				}
-			}
 
 			FBoneTransform f(FCompactPoseBoneIndex(index), modelBone);
 			//f.Transform.SetRotation(FQuat::Identity);

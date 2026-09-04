@@ -1,4 +1,4 @@
-// VRM4U Copyright (c) 2021-2026 Haruyoshi Yamamoto. This software is released under the MIT License.
+// VRM4U Copyright (c) 2021-2024 Haruyoshi Yamamoto. This software is released under the MIT License.
 
 #pragma once
 #include "Kismet/BlueprintFunctionLibrary.h"
@@ -264,7 +264,7 @@ public:
 	static bool VRMIsEditorPreviewObject(const UObject* obj);
 
 	UFUNCTION(BlueprintPure, Category = "VRM4U")
-	static void VRMGetViewportSize(FIntPoint &ViewportSize, FIntPoint &BufferSize, bool bForceMainView = false);
+	static void VRMGetViewportSize(FIntPoint &ViewportSize, FIntPoint &BufferSize);
 
 };
 

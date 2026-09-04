@@ -74,7 +74,7 @@ bool FVRM4URenderModule::isCaptureTarget(const FSceneView* View) {
 	return bCapture;
 }
 
-void FVRM4URenderModule::AddCopyPass(FRDGBuilder &GraphBuilder, FIntRect ViewRect, FRDGTextureRef SrcRDGTex, TObjectPtr<UTextureRenderTarget2D> RenderTarget) {
+void FVRM4URenderModule::AddCopyPass(FRDGBuilder &GraphBuilder, FIntPoint ViewRectSize, FRDGTextureRef SrcRDGTex, TObjectPtr<UTextureRenderTarget2D> RenderTarget) {
 
 	if (SrcRDGTex == nullptr) {
 		return;
@@ -86,7 +86,7 @@ void FVRM4URenderModule::AddCopyPass(FRDGBuilder &GraphBuilder, FIntRect ViewRec
 	//FPostOpaqueRenderParameters& Parameters
 	//const FIntPoint ViewRectSize = FIntPoint(Parameters.ViewportRect.Width(), Parameters.ViewportRect.Height());
 
-	AddPass(GraphBuilder, RDG_EVENT_NAME("VRM4UAddCopyPass"), [ViewRect, SrcRDGTex, RenderTarget](FRHICommandListImmediate& RHICmdList)
+	AddPass(GraphBuilder, RDG_EVENT_NAME("VRM4UAddCopyPass"), [ViewRectSize, SrcRDGTex, RenderTarget](FRHICommandListImmediate& RHICmdList)
 		{
 			if (SrcRDGTex == nullptr) return;
 			if (SrcRDGTex->GetRHI() == nullptr) return;
@@ -117,7 +117,6 @@ void FVRM4URenderModule::AddCopyPass(FRDGBuilder &GraphBuilder, FIntRect ViewRec
 				SetGraphicsPipelineState(RHICmdList, GraphicsPSOInit, 0);
 
 				FRHITexture* SceneTexture = SrcRDGTex->GetRHI()->GetTexture2D();
-				const FIntPoint SourceTextureSize(SceneTexture->GetSizeX(), SceneTexture->GetSizeY());
 
 #if	UE_VERSION_OLDER_THAN(5,3,0)
 				PixelShader->SetParameters(RHICmdList, TStaticSamplerState<SF_Bilinear>::GetRHI(), SceneTexture);
@@ -131,10 +130,10 @@ void FVRM4URenderModule::AddCopyPass(FRDGBuilder &GraphBuilder, FIntRect ViewRec
 					RHICmdList,
 					0, 0,									// Dest X, Y
 					TargetSize.X, TargetSize.Y,				// Dest Width, Height
-					ViewRect.Min.X, ViewRect.Min.Y,			// Source U, V (コピー開始位置)
-					ViewRect.Width(), ViewRect.Height(),	// Source USize, VSize (コピーサイズ)
+					0, 0,									// Source U, V
+					ViewRectSize.X, ViewRectSize.Y,			// Source USize, VSize
 					TargetSize,								// Target buffer size
-					SourceTextureSize,						// Source texture size
+					FIntPoint(SceneTexture->GetSizeX(), SceneTexture->GetSizeY()),	// Source texture size
 					VertexShader,
 					EDRF_Default);
 			}
@@ -292,7 +291,7 @@ void FVRM4URenderModule::OnPostOpaque(FPostOpaqueRenderParameters& Parameters) {
 				DstTex
 			);
 			*/
-			FVRM4URenderModule::AddCopyPass(*Parameters.GraphBuilder, Parameters.ViewportRect, SrcRDGTex, c.Key);
+			FVRM4URenderModule::AddCopyPass(*Parameters.GraphBuilder, FIntPoint(Parameters.ViewportRect.Width(), Parameters.ViewportRect.Height()), SrcRDGTex, c.Key);
 		}
 	}
 }
@@ -343,7 +342,7 @@ void FVRM4URenderModule::OnOverlay(FPostOpaqueRenderParameters& Parameters) {
 				DstTex);
 			*/
 
-			FVRM4URenderModule::AddCopyPass(*Parameters.GraphBuilder, Parameters.ViewportRect, SrcRDGTex, c.Key);
+			FVRM4URenderModule::AddCopyPass(*Parameters.GraphBuilder, FIntPoint(Parameters.ViewportRect.Width(), Parameters.ViewportRect.Height()), SrcRDGTex, c.Key);
 		}
 	}
 }

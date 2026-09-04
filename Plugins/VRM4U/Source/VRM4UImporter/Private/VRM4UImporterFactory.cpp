@@ -1,4 +1,4 @@
-// VRM4U Copyright (c) 2021-2026 Haruyoshi Yamamoto. This software is released under the MIT License.
+// VRM4U Copyright (c) 2021-2024 Haruyoshi Yamamoto. This software is released under the MIT License.
 
 #include "VRM4UImporterFactory.h"
 #include "VRM4UImporterLog.h"
@@ -194,16 +194,11 @@ UObject* UVRM4UImporterFactory::FactoryCreateBinary(UClass* InClass, UObject* In
 		return nullptr;
 	}
 
-	{
-		const UVrmRuntimeSettings* Settings = GetDefault<UVrmRuntimeSettings>();
-		const bool bSkipValidation = Settings->bSkipValidationOnImport
-			|| VRMConverter::Options::Get().IsDebugIgnoreVRMValidation();
-		if (!bSkipValidation) {
-			if (ULoaderBPFunctionLibrary::IsValidVRM4UFile(fullFileName) == false) {
-				return nullptr;
-			}
+	if (VRMConverter::Options::Get().IsDebugIgnoreVRMValidation() == false) {
+		if (ULoaderBPFunctionLibrary::IsValidVRM4UFile(fullFileName) == false) {
+			return nullptr;
 		}
-	}	
+	}
 
 	static UVrmImportUI* ImportUI = nullptr;
 #if	UE_VERSION_OLDER_THAN(5,0,0)
@@ -224,7 +219,7 @@ UObject* UVRM4UImporterFactory::FactoryCreateBinary(UClass* InClass, UObject* In
 			ImportUI->bVrm10RemoveLocalRotation = false;
 
 			ImportUI->ModelScale = 1.0f;
-			ImportUI->bMergeMaterial = false;
+			ImportUI->bMergeMaterial = true;
 			ImportUI->bMergePrimitive = false;
 			ImportUI->TitleAuthor.Empty();
 			ImportUI->Thumbnail = nullptr;

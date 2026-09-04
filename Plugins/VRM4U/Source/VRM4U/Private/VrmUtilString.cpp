@@ -131,10 +131,8 @@ FString VRMUtil::MakeName(const FString& str, bool IsJoint) {
 		++InvalidChar;
 	}
 	return TmpName;
-#elif	UE_VERSION_OLDER_THAN(5,8,0)
-	return UE::Interchange::MakeName(str, IsJoint);
 #else
-	return UE::Interchange::MakeSanitizedName(str, IsJoint);
+	return UE::Interchange::MakeName(str, IsJoint);
 #endif
 }
 

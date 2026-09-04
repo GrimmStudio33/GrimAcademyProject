@@ -1,4 +1,4 @@
-// VRM4U Copyright (c) 2021-2026 Haruyoshi Yamamoto. This software is released under the MIT License.
+// VRM4U Copyright (c) 2021-2024 Haruyoshi Yamamoto. This software is released under the MIT License.
 
 #include "VrmBPFunctionLibrary.h"
 #include "Materials/MaterialInterface.h"
@@ -1449,9 +1449,8 @@ namespace {
 		}
 		BOOL b = SetLayeredWindowAttributes(h, cr, a, dwFlags);
 		return b != 0;
-#else
-		return false;
 #endif
+		return false;
 	}
 	void setDefaultWindow(const bool) {
 		setTransParent(false, FLinearColor(1, 1, 1, 1));
@@ -1952,64 +1951,37 @@ bool UVrmBPFunctionLibrary::VRMIsEditorPreviewObject(const UObject* obj) {
 	return false;
 }
 
-void UVrmBPFunctionLibrary::VRMGetViewportSize(FIntPoint & ViewportSize, FIntPoint & BufferSize, bool bForceMainView){
+void UVrmBPFunctionLibrary::VRMGetViewportSize(FIntPoint & ViewportSize, FIntPoint & BufferSize){
 
 	ViewportSize = FIntPoint(0, 0);
-	BufferSize = FIntPoint(0, 0);
-
-	bool bFoundViewport = false;
 
 #if WITH_EDITOR
-	//bool bPlay, bool bSIE, bool bEditor
-	bool bPlay, bSIE, bEditor;
-	VRMGetPlayMode(bPlay, bSIE, bEditor);
+	bool b1, b2, b3;
+	VRMGetPlayMode(b1, b2, b3);
 
-	bool bGameView = bPlay;
-	if (bSIE) {
+	bool bGameView = b1;
+	if (b2) {
 		bGameView = false;
 	}
 
-	if (GEditor == nullptr) {
-		bGameView = true;
-	}else{
-		if (GEditor->GetActiveViewport() == nullptr) bGameView = true;
-	}
+	if (GEditor == nullptr) bGameView = true;
+	if (GEditor->GetActiveViewport() == nullptr) bGameView = true;
 
-	if (GEditor) {
-		if (bGameView == false) {
-			bFoundViewport = true;
-			ViewportSize = GEditor->GetActiveViewport()->GetRenderTargetTextureSizeXY();
-			if (bForceMainView)
-			{
-				FViewportClient* ViewportClient = GEditor->GetActiveViewport()->GetClient();
-				UWorld* ViewportWorld = ViewportClient ? ViewportClient->GetWorld() : nullptr;
-
-				const EWorldType::Type WT = ViewportWorld ? (EWorldType::Type)ViewportWorld->WorldType : EWorldType::None;
-				const bool bIsEditorViewport = (WT == EWorldType::Editor);
-				const bool bIsPreviewOrThumbnail = (WT == EWorldType::EditorPreview);
-
-				// レベルエディタのビューポートだけ採用
-				if (bIsEditorViewport && !bPlay && !bSIE && !bIsPreviewOrThumbnail)
-				{
-					BufferSize = ViewportSize;
-					return;
-				}
-			}
-		}
+	if (bGameView == false) {
+		ViewportSize = GEditor->GetActiveViewport()->GetRenderTargetTextureSizeXY();
+		return;
 	}
 #endif
 
-	if (bFoundViewport == false){
-		if (GEngine == nullptr) return;
-		if (GEngine->GameViewport == nullptr) return;
-		if (GEngine->GameViewport->Viewport == nullptr) return;
+	if (GEngine == nullptr) return;
+	if (GEngine->GameViewport == nullptr) return;
+	if (GEngine->GameViewport->Viewport == nullptr) return;
 
-		FViewport* Viewport = GEngine->GameViewport->Viewport;
-		ViewportSize = Viewport->GetRenderTargetTextureSizeXY();
-	}
+	FViewport* Viewport = GEngine->GameViewport->Viewport;
+	ViewportSize = Viewport->GetRenderTargetTextureSizeXY();
 
 #if	UE_VERSION_OLDER_THAN(5,6,0)
-	float ScreenPercentage = FMath::Clamp(UKismetSystemLibrary::GetConsoleVariableFloatValue("r.ScreenPercentage"), 1.f, 100.f);
+	float ScreenPercentage = FMath::Clamp(UKismetSystemLibrary::GetConsoleVariableFloatValue("r.ScreenPercentage"), 0.f, 1.f);
 	BufferSize = FIntPoint (
 		FMath::RoundToInt(ViewportSize.X * ScreenPercentage / 100.0f),
 		FMath::RoundToInt(ViewportSize.Y * ScreenPercentage / 100.0f)

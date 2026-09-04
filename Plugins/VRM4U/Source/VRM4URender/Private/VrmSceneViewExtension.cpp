@@ -1,4 +1,4 @@
-// VRM4U Copyright (c) 2021-2026 Haruyoshi Yamamoto. This software is released under the MIT License.
+// VRM4U Copyright (c) 2021-2024 Haruyoshi Yamamoto. This software is released under the MIT License.
 
 #include "VrmSceneViewExtension.h"
 #include "VrmExtensionRimFilterData.h"
@@ -590,11 +590,11 @@ FScreenPassTexture FVrmSceneViewExtension::Pass_RenderThread(FRDGBuilder & Graph
 
 		if (src.IsValid() && dst.Get()) {
 #if	UE_VERSION_OLDER_THAN(5,4,0)
-			FVRM4URenderModule::AddCopyPass(GraphBuilder, View.UnscaledViewRect, src.Texture, dst);
+			FVRM4URenderModule::AddCopyPass(GraphBuilder, FIntPoint(View.UnscaledViewRect.Width(), View.UnscaledViewRect.Height()), src.Texture, dst);
 			bOverride = true;
 
 #else
-			FVRM4URenderModule::AddCopyPass(GraphBuilder, View.UnscaledViewRect, src.TextureSRV->GetParent(), dst);
+			FVRM4URenderModule::AddCopyPass(GraphBuilder, FIntPoint(View.UnscaledViewRect.Width(), View.UnscaledViewRect.Height()), src.TextureSRV->GetParent(), dst);
 			bOverride = true;
 #endif
 		}

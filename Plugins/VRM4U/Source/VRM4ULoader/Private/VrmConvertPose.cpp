@@ -1,4 +1,4 @@
-﻿// VRM4U Copyright (c) 2021-2026 Haruyoshi Yamamoto. This software is released under the MIT License.
+﻿// VRM4U Copyright (c) 2021-2024 Haruyoshi Yamamoto. This software is released under the MIT License.
 
 #include "VrmConvertRig.h"
 #include "VrmConvert.h"
@@ -1089,15 +1089,16 @@ bool VRMConverter::ConvertPose(UVrmAssetListObject *vrmAssetList) {
 								t.BoneVRM,
 							};
 							bool finish = false;
-							{
-								auto* m = vrmAssetList->VrmMetaObject->humanoidBoneTable.Find(target[0]);
+							for (int i = 0; i < 2; ++i) {
+								auto* m = vrmAssetList->VrmMetaObject->humanoidBoneTable.Find(target[i]);
 								if (m) {
 									bFound = true;
-									a.BoneVRM = target[0];
+									a.BoneVRM = target[i];
 									a.BoneModel = *m;
 									mapTable.Add(a.BoneModel, a);
 								}
 								finish = true;
+								break;
 							}
 
 							if (finish) break;
